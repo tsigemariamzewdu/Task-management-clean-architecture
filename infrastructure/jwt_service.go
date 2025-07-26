@@ -1,28 +1,27 @@
 package infrastruture
 
-
-
 import (
+	usecases "task_management/Usecases"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
 
 // JWTServiceImpl implements domain.JWTService
-type JWTServiceImpl struct {
+type JWTService struct {
 	secretKey []byte
 }
 
 // NewJWTService returns a new instance of JWTServiceImpl with a secret key
-func NewJWTService(secret string) *JWTServiceImpl {
-	return &JWTServiceImpl{
+func NewJWTService(secret string)usecases.IJWTService {
+	return &JWTService{
 		secretKey: []byte(secret),
 	}
 }
 
 
 // GenerateToken creates a signed JWT token for the given user ID and role
-func (j *JWTServiceImpl) GenerateToken(userID, role string) (string, error) {
+func (j *JWTService) GenerateToken(userID, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":  userID,
 		"role": role,

@@ -1,78 +1,77 @@
 package usecases
 
 import (
-	"context"
 	"errors"
 	domain "task_management/Domain"
-	repositories "task_management/Repositories"
-	infrastruture "task_management/infrastructure"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserUseCase struct {
-	UserRepo repositories.UserRepository
-	PasswordService infrastruture.PasswordServiceImpl
-	JWTService infrastruture.JWTServiceImpl
-
+	UserRepo        IUserRepository
+	PasswordService IPasswordService
+	JWTService      IJWTService
 }
 
-//register use case
-func (uc *UserUseCase) Register (ctx context.Context,input *domain.RegisterUserInput)(*domain.User,error){
-	ctx,cancel:= context.WithTimeout(ctx ,10*time.Second)
-	defer cancel()
-	//first count to check if the user already exits or not
-
-	count,err := uc.UserRepo.CountByUsername(ctx,input.Username)
-	if err!=nil{
-		return nil,errors.New("error while checking existing user")
+func NewUserUseCase(repo IUserRepository, ps IPasswordService, jw IJWTService) *UserUseCase {
+	return &UserUseCase{
+		UserRepo:        repo,
+		PasswordService: ps,
+		JWTService:      jw,
 	}
-	if count>0{
-		return nil,errors.New("username already exists")
+}
+
+// register use case
+func (uc *UserUseCase) Register(input *domain.RegisterUserInput) (*domain.User, error) {
+
+	count, err := uc.UserRepo.CountByUsername(input.Username)
+	if err != nil {
+		return nil, errors.New("error while checking existing user")
+	}
+	if count > 0 {
+		return nil, errors.New("username already exists")
 	}
 	//check number of total users and if 0 make the first user and admin
-	totalUsers,err:= uc.UserRepo.CountAll(ctx)
-	if err !=nil{
-		return nil,errors.New("error checking total users")
+	totalUsers, err := uc.UserRepo.CountAll()
+	if err != nil {
+		return nil, errors.New("error checking total users")
 
 	}
 	//hash the password
-	hashedPassword,err:=uc.PasswordService.HashPassword(input.Password)
-	if err !=nil{
-		return nil,errors.New("failed to hash password")
+	hashedPassword, err := uc.PasswordService.HashPassword(input.Password)
+	if err != nil {
+		return nil, errors.New("failed to hash password")
 
 	}
 	//set the role as user first then check if it the first user and if so make it admin
-	role:=domain.RoleUser
-	if totalUsers==0{
-		role=domain.RoleAdmin
+	role := domain.RoleUser
+	if totalUsers == 0 {
+		role = domain.RoleAdmin
 	}
 	newUser := &domain.User{
-		ID: primitive.NewObjectID(),
+		ID:       primitive.NewObjectID(),
 		Username: input.Username,
 		Password: hashedPassword,
-		Role: role,
+		Role:     role,
 	}
-	err= uc.UserRepo.CreateUser(ctx,newUser)
-	if err !=nil{
-		return nil,errors.New("failed to add user")
+	err = uc.UserRepo.CreateUser(newUser)
+	if err != nil {
+		return nil, errors.New("failed to add user")
 	}
-	return newUser,nil
+	return newUser, nil
 }
 
-//login use case 
+//login use case
 
-func (uc *UserUseCase) Login(ctx context.Context, input domain.RegisterUserInput) (string, *domain.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	//find username 
-	user, err := uc.UserRepo.FindByUsername(ctx, input.Username)
+func (uc *UserUseCase) Login(input domain.RegisterUserInput) (string, *domain.User, error) {
+
+	//find username
+	user, err := uc.UserRepo.FindByUsername(input.Username)
 	if err != nil {
 		return "", nil, errors.New("invalid username or password")
 	}
-	
-	//compare password 
+
+	//compare password
 	ok := uc.PasswordService.ComparePassword(user.Password, input.Password)
 	if !ok {
 		return "", nil, errors.New("invalid username or password")
@@ -85,8 +84,8 @@ func (uc *UserUseCase) Login(ctx context.Context, input domain.RegisterUserInput
 
 	return token, user, nil
 }
-//promoteuser usecase 
-func (uc * UserUseCase) PromoteUser(ctx context.Context,userID string)error{
-	return uc.UserRepo.PromoteUser(ctx,userID)
-}
 
+// promoteuser usecase
+func (uc *UserUseCase) PromoteUser(userID string) error {
+	return uc.UserRepo.PromoteUser(userID)
+}

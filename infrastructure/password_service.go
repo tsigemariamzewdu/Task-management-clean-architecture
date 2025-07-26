@@ -1,16 +1,20 @@
 package infrastruture
 
-
-
 import (
+	"task_management/usecases"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
 // PasswordServiceImpl implements the domain.PasswordService interface
-type PasswordServiceImpl struct{}
+type PasswordService struct{}
+
+func NewPasswordService()usecases.IPasswordService{
+	return &PasswordService{}
+}
 
 // hashes the given password using bcrypt.
-func (p *PasswordServiceImpl) HashPassword(password string) (string, error) {
+func (p *PasswordService) HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -20,7 +24,7 @@ func (p *PasswordServiceImpl) HashPassword(password string) (string, error) {
 
 //  compares a hashed password with a plain text input.
 
-func (p *PasswordServiceImpl) ComparePassword(hashedPassword, inputPassword string) bool {
+func (p *PasswordService) ComparePassword(hashedPassword, inputPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(inputPassword))
 	return err == nil
 }

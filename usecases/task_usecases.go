@@ -1,75 +1,71 @@
 package usecases
 
 import (
-	"context"
 	"errors"
 	domain "task_management/Domain"
-	repositories "task_management/Repositories"
-	"time"
+
+	// repositories "task_management/Repositories"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-//define TaskUseCase struct
+// define TaskUseCase struct
 type TaskUseCase struct {
-	TaskRepo repositories.TaskRepository
+	TaskRepo ITaskRepo
 }
 
-//add new task usecase
-func (uc *TaskUseCase) AddTask(ctx context.Context,input *domain.InputTask)(*domain.Task,error){
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
+func NewTaskUseCase(repo ITaskRepo) *TaskUseCase {
+	return &TaskUseCase{
+		TaskRepo: repo,
+	}
+}
+
+// add new task usecase
+func (uc *TaskUseCase) AddTask(input *domain.InputTask) (*domain.Task, error) {
 
 	task := &domain.Task{
 		ID:          primitive.NewObjectID(),
 		Title:       input.Title,
 		Description: input.Description,
-		Status:   input.Status,
-		
+		Status:      input.Status,
 	}
 
-	err:= uc.TaskRepo.CreateTask(ctx,task)
-	if err!=nil{
-		return nil,errors.New("failed to create task")
+	err := uc.TaskRepo.CreateTask(task)
+	if err != nil {
+		return nil, errors.New("failed to create task")
 	}
-	return task,nil
+	return task, nil
 }
-//getalltasksusecase
-func (uc *TaskUseCase) GetAllTasks(ctx context.Context)([]domain.Task ,error){
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
 
-	tasks,err:=uc.TaskRepo.GetAllTasks(ctx)
-	if err !=nil{
-		return nil,errors.New("failed to retrieve")
+// getalltasksusecase
+func (uc *TaskUseCase) GetAllTasks() ([]domain.Task, error) {
+
+	tasks, err := uc.TaskRepo.GetAllTasks()
+	if err != nil {
+		return nil, errors.New("failed to retrieve")
 	}
-	return tasks,nil
+	return tasks, nil
 
 }
-//get task byID use case
-func (uc *TaskUseCase) GetTaskByID(ctx context.Context,id string)(*domain.Task,error){
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	
-	
-	task,err:=uc.TaskRepo.GetTaskByID(ctx,id)
-	if err!=nil{
-		return nil,errors.New("task not found")
+
+// get task byID use case
+func (uc *TaskUseCase) GetTaskByID(id string) (*domain.Task, error) {
+
+	task, err := uc.TaskRepo.GetTaskByID(id)
+	if err != nil {
+		return nil, errors.New("task not found")
 	}
-	return task,nil
+	return task, nil
 }
-//update task by id
-func (uc *TaskUseCase) UpdateTaskByID(ctx context.Context, id string, input *domain.Task) error {
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
 
+// update task by id
+func (uc *TaskUseCase) UpdateTaskByID(id string, input *domain.Task) error {
 
-	return uc.TaskRepo.UpdateTaskByID(ctx, id, input)
+	return uc.TaskRepo.UpdateTaskByID(id, input)
 }
-//delete task by id
-func (uc *TaskUseCase) DeleteTaskByID(ctx context.Context, id string) error {
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
 
-	return uc.TaskRepo.DeleteTaskByID(ctx,id)
+// delete task by id
+func (uc *TaskUseCase) DeleteTaskByID(id string) error {
+
+	return uc.TaskRepo.DeleteTaskByID(id)
 }

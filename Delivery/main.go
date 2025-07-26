@@ -1,43 +1,38 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"os"
-	"task_management/db"
+	"task_management/Delivery/controllers"
 	"task_management/Delivery/router"
-
+	infrastructure "task_management/Infrastructure"
+	repositories "task_management/Repositories"
+	usecases "task_management/usecases"
+	
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-
-
 func main() {
-	err:= godotenv.Load()
-	if err!=nil{
-		
-		log.Fatal("error loading env",err)
+	// Initialize Gin router
+	r := gin.Default()
+	
+	// Initialize dependencies
+	userRepo := repositories.NewUserRepository()
+	taskRepo := repositories.NewTaskRepository()
+	passwordService := infrastructure.NewPasswordService()
+	jwtService := infrastructure.NewJWTService("key")
+	
+	// Create use cases
+	userUseCase := usecases.NewUserUseCase(userRepo, passwordService, jwtService)
+	taskUseCase := usecases.NewTaskUseCase(taskRepo)
+	
+	// Create controllers
+	userController := controllers.NewUserController(userUseCase)
+	taskController := controllers.NewTaskController(taskUseCase)
+	
+	// Setup routes
+	if err := router.SetUpRoutes(r, userController, taskController); err != nil {
+		panic(err) 
 	}
-	mongouri:=os.Getenv("mongo_url")
-	clientOptions := options.Client().ApplyURI(mongouri)
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("connected to mongoDB")
-	db.TaskCollection = client.Database("taskmanager").Collection("tasks")
-	db.UserCollection=client.Database("taskmanager").Collection("users")
-	app := gin.Default()
-	router.SetUpRoutes(app)
-	app.Run("localhost:8081")
-
+	
+	// Start server
+	r.Run(":8080")
 }

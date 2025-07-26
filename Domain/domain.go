@@ -49,10 +49,4 @@ type RegisterUserInput struct{
 }
 
 
-type PasswordService interface {
-	HashPassword(password string) (string, error)
-	ComparePassword(hashedPassword, inputPassword string) bool
-}
-type JWTService interface {
-	GenerateToken(userID, role string) (string, error)
-}
+

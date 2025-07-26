@@ -39,7 +39,7 @@ func (userctrl *UserController) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := userctrl.UserUseCase.Register(c.Request.Context(), &newUser)
+	user, err := userctrl.UserUseCase.Register( &newUser)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -58,7 +58,7 @@ func (userctrl *UserController) Login(c *gin.Context) {
 		return
 	}
 
-	token, user, err := userctrl.UserUseCase.Login(c.Request.Context(), input)
+	token, user, err := userctrl.UserUseCase.Login( input)
 	if err != nil {
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -93,7 +93,7 @@ func (userctrl *UserController) PromoteUser(c *gin.Context) {
 		return
 	}
 
-	err := userctrl.UserUseCase.PromoteUser(c.Request.Context(), req.UserID)
+	err := userctrl.UserUseCase.PromoteUser( req.UserID)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -105,7 +105,7 @@ func (userctrl *UserController) PromoteUser(c *gin.Context) {
 //get all tasks controller
 
 func (taskctrl *TaskController)GetTasks(c *gin.Context) {
-	tasks,err := taskctrl.TaskUseCase.GetAllTasks(c.Request.Context())
+	tasks,err := taskctrl.TaskUseCase.GetAllTasks()
 	if err!=nil{
 		c.IndentedJSON(http.StatusInternalServerError,  gin.H{"error":err.Error()})
 		return
@@ -117,7 +117,7 @@ func (taskctrl *TaskController)GetTaskByID(c *gin.Context) {
 	id := c.Param("id")
 
 	
-	task, err := taskctrl.TaskUseCase.GetTaskByID(c.Request.Context(),id)
+	task, err := taskctrl.TaskUseCase.GetTaskByID(id)
 	if err !=nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "task not found"})
 		return
@@ -132,7 +132,7 @@ func (taskctrl *TaskController) AddTask(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error here ": err.Error()})
 		return
 	}
-	tasknew,err := taskctrl.TaskUseCase.AddTask(c.Request.Context(),&newTask)
+	tasknew,err := taskctrl.TaskUseCase.AddTask(&newTask)
 	if err !=nil  {
 		c.IndentedJSON(http.StatusConflict, gin.H{"error": "task already exits"})
 		return
@@ -146,7 +146,7 @@ func (taskctrl *TaskController) DeleteTaskByID(c *gin.Context) {
 	
 
 	
-	err :=taskctrl.TaskUseCase.DeleteTaskByID(c.Request.Context(),id)
+	err :=taskctrl.TaskUseCase.DeleteTaskByID(id)
 	if err !=nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "task not found"})
 		return
@@ -167,7 +167,7 @@ func (taskctrl *TaskController) UpdateTaskByID(c *gin.Context) {
 		return
 	}
 
-	err := taskctrl.TaskUseCase.UpdateTaskByID(c.Request.Context(),id, &updatedTask)
+	err := taskctrl.TaskUseCase.UpdateTaskByID(id, &updatedTask)
 	if err !=nil{
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "task not found"})
 		return

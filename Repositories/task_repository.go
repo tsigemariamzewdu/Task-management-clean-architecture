@@ -5,52 +5,53 @@ import (
 	"errors"
 	"fmt"
 	domain "task_management/Domain"
+	"task_management/db"
+	"task_management/usecases"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type TaskRepository interface {
-	CreateTask(ctx context.Context, task *domain.Task) error
-	GetAllTasks(ctx context.Context) ([]domain.Task, error)
-	GetTaskByID(ctx context.Context, taskID string) (*domain.Task, error)
-	UpdateTaskByID(ctx context.Context, taskID string, updatedTask *domain.Task) error
-	DeleteTaskByID(ctx context.Context, taskID string) error
-}
-
-type TaskRepositoryImpl struct {
+type TaskRepository struct {
 	Collection *mongo.Collection
+	 Context context.Context
+	
 }
-func NewTaskRepository(collection *mongo.Collection) TaskRepository {
-	return &TaskRepositoryImpl{Collection: collection}
+func NewTaskRepository() usecases.ITaskRepo {
+	col:=db.GetTasksCollection()
+	ctx:= context.Background()
+	return &TaskRepository{
+		Collection: col,
+		Context: ctx,
+	}
 }
 // function to create a new task in the database
-func ( r *TaskRepositoryImpl) CreateTask(ctx context.Context,task *domain.Task) error{
-	_,err:= r.Collection.InsertOne(ctx,task)
+func ( r *TaskRepository) CreateTask(task *domain.Task) error{
+	_,err:= r.Collection.InsertOne(r.Context,task)
 	return err
 }
 
 //function to get all tasks 
-func (r *TaskRepositoryImpl) GetAllTasks(ctx context.Context) ([]domain.Task, error) {
+func (r *TaskRepository) GetAllTasks() ([]domain.Task, error) {
     // Initialize empty slice to return empty slice in case of no tasks
     tasks := make([]domain.Task, 0)
 
-    cur, err := r.Collection.Find(ctx, bson.M{})
+    cur, err := r.Collection.Find(r.Context, bson.M{})
     if err != nil {
         return nil, fmt.Errorf("failed to fetch tasks: %v", err)  
     }
-    defer cur.Close(ctx)
+    defer cur.Close(r.Context)
 
     // Decode all 
-    if err := cur.All(ctx, &tasks); err != nil {
+    if err := cur.All(r.Context, &tasks); err != nil {
         return nil, fmt.Errorf("failed to decode tasks: %v", err)
     }
 
     return tasks, nil
 }
 //function to get task by id
-func (r *TaskRepositoryImpl) GetTaskByID(ctx context.Context, taskID string) (*domain.Task, error) {
+func (r *TaskRepository) GetTaskByID( taskID string) (*domain.Task, error) {
 	//check id 
 	objID, err := primitive.ObjectIDFromHex(taskID)
 	if err != nil {
@@ -60,7 +61,7 @@ func (r *TaskRepositoryImpl) GetTaskByID(ctx context.Context, taskID string) (*d
 	//find task mapped with that id 
 
 	var task domain.Task
-	err = r.Collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&task)
+	err = r.Collection.FindOne(r.Context, bson.M{"_id": objID}).Decode(&task)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func (r *TaskRepositoryImpl) GetTaskByID(ctx context.Context, taskID string) (*d
 }
 //function to update task by id 
 
-func (r *TaskRepositoryImpl) UpdateTaskByID(ctx context.Context, taskID string, updatedTask *domain.Task) error {
+func (r *TaskRepository) UpdateTaskByID(taskID string, updatedTask *domain.Task) error {
 	objID, err := primitive.ObjectIDFromHex(taskID)
 	if err != nil {
 		return errors.New("invalid task ID")
@@ -82,7 +83,7 @@ func (r *TaskRepositoryImpl) UpdateTaskByID(ctx context.Context, taskID string, 
 		},
 	}
 
-	result, err := r.Collection.UpdateOne(ctx, bson.M{"_id": objID}, update)
+	result, err := r.Collection.UpdateOne(r.Context, bson.M{"_id": objID}, update)
 	if err != nil {
 		return err
 	}
@@ -93,13 +94,13 @@ func (r *TaskRepositoryImpl) UpdateTaskByID(ctx context.Context, taskID string, 
 	return nil
 }
 //function to delete task by id
-func (r *TaskRepositoryImpl) DeleteTaskByID(ctx context.Context, taskID string) error {
+func (r *TaskRepository) DeleteTaskByID( taskID string) error {
 	objID, err := primitive.ObjectIDFromHex(taskID)
 	if err != nil {
 		return errors.New("invalid task ID")
 	}
 
-	result, err := r.Collection.DeleteOne(ctx, bson.M{"_id": objID})
+	result, err := r.Collection.DeleteOne(r.Context, bson.M{"_id": objID})
 	if err != nil {
 		return err
 	}
