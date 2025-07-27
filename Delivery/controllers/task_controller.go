@@ -2,10 +2,13 @@ package controllers
 
 import (
 	"net/http"
+	// "time"
 
 	domain "task_management/Domain"
 	usecases "task_management/usecases"
+
 	"github.com/gin-gonic/gin"
+	// "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 //holds a reference to the user usecase
@@ -14,6 +17,10 @@ type UserController struct {
 }
 type TaskController struct{
 	TaskUseCase *usecases.TaskUseCase
+}
+type RegisterUserInputDTO struct{
+	Username string  `json:"username"`
+	Password string   `json:"password"`
 }
 
 //constructor
@@ -32,14 +39,14 @@ func NewTaskController ( tc *usecases.TaskUseCase)*TaskController{
 
 // Register controller
 func (userctrl *UserController) Register(c *gin.Context) {
-	var newUser domain.RegisterUserInput
+	var newUser RegisterUserInputDTO
 
 	if err := c.ShouldBindJSON(&newUser); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input:" + err.Error()})
 		return
 	}
 
-	user, err := userctrl.UserUseCase.Register( &newUser)
+	user, err := userctrl.UserUseCase.Register(userctrl.ChangeToDomain(&newUser))
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -51,14 +58,14 @@ func (userctrl *UserController) Register(c *gin.Context) {
 
 // Login controller
 func (userctrl *UserController) Login(c *gin.Context) {
-	var input domain.RegisterUserInput
+	var input RegisterUserInputDTO
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "invalid input format"})
 		return
 	}
 
-	token, user, err := userctrl.UserUseCase.Login( input)
+	token, user, err := userctrl.UserUseCase.Login( *userctrl.ChangeToDomain(&input))
 	if err != nil {
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -101,7 +108,13 @@ func (userctrl *UserController) PromoteUser(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "user promoted to admin"})
 }
-
+//function to change the dto to domain
+func (userctrl *UserController)ChangeToDomain(input *RegisterUserInputDTO)*domain.RegisterUserInput{
+	var user domain.RegisterUserInput
+	user.Username = input.Username
+	user.Password = input.Password
+	return &user
+}
 //get all tasks controller
 
 func (taskctrl *TaskController)GetTasks(c *gin.Context) {
