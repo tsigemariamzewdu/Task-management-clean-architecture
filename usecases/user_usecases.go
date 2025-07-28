@@ -11,6 +11,7 @@ type UserUseCase struct {
 	UserRepo        IUserRepository
 	PasswordService IPasswordService
 	JWTService      IJWTService
+	
 }
 
 func NewUserUseCase(repo IUserRepository, ps IPasswordService, jw IJWTService) *UserUseCase {

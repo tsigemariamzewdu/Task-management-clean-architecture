@@ -3,7 +3,7 @@ package main
 import (
 	"task_management/Delivery/controllers"
 	"task_management/Delivery/router"
-	infrastructure "task_management/Infrastructure"
+	infrastructure "task_management/infrastructure"
 	repositories "task_management/Repositories"
 	usecases "task_management/usecases"
 	
@@ -19,6 +19,7 @@ func main() {
 	taskRepo := repositories.NewTaskRepository()
 	passwordService := infrastructure.NewPasswordService()
 	jwtService := infrastructure.NewJWTService("key")
+	authService:=infrastructure.NewAuthService("key")
 	
 	// Create use cases
 	userUseCase := usecases.NewUserUseCase(userRepo, passwordService, jwtService)
@@ -29,7 +30,7 @@ func main() {
 	taskController := controllers.NewTaskController(taskUseCase)
 	
 	// Setup routes
-	if err := router.SetUpRoutes(r, userController, taskController); err != nil {
+	if err := router.SetUpRoutes(r, userController, taskController,authService); err != nil {
 		panic(err) 
 	}
 	

@@ -3,14 +3,23 @@ package infrastruture
 import (
 	"fmt"
 	"net/http"
+	usecases "task_management/usecases"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
+type AuthService struct{
+	jwtSecret []byte
+}
+
+func NewAuthService( secret string)usecases.IAuthService{
+	return &AuthService{jwtSecret: []byte(secret)}
+
+}
 
 var jwtSecret = []byte("wellwellwell")
 
-func AuthWithRole(allowedRoles ...string) gin.HandlerFunc {
+func (a *AuthService)AuthWithRole(allowedRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//read the token from cookie
 		cookie, err := c.Request.Cookie("auth_token")

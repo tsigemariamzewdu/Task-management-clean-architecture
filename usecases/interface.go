@@ -1,6 +1,10 @@
 package usecases
 
-import domain "task_management/Domain"
+import (
+	domain "task_management/Domain"
+
+	"github.com/gin-gonic/gin"
+)
 
 // user related interfaces
 type IUserRepository interface {
@@ -28,4 +32,7 @@ type ITaskRepo interface {
 	GetTaskByID(taskID string) (*domain.Task, error)
 	UpdateTaskByID(taskID string, updatedTask *domain.Task) error
 	DeleteTaskByID(taskID string) error
+}
+type IAuthService interface {
+	AuthWithRole(roles ...string) gin.HandlerFunc
 }
