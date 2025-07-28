@@ -1,7 +1,7 @@
 package infrastruture
 
 import (
-	usecases "task_management/Usecases"
+	usecases "task_management/usecases"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"

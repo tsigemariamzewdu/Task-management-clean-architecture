@@ -4,7 +4,7 @@ import (
 	"errors"
 	domain "task_management/Domain"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	
 )
 
 type UserUseCase struct {
@@ -49,7 +49,7 @@ func (uc *UserUseCase) Register(input *domain.RegisterUserInput) (*domain.User, 
 		role = domain.RoleAdmin
 	}
 	newUser := &domain.User{
-		ID:       primitive.NewObjectID(),
+		
 		Username: input.Username,
 		Password: hashedPassword,
 		Role:     role,

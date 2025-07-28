@@ -39,6 +39,8 @@ func NewUserRepository() usecases.IUserRepository {
 
 // inserts a new user to mongodb collection
 func (r *UserRepository) CreateUser( user *domain.User) error {
+	user.ID=primitive.NewObjectID()
+	
 	_, err := r.Collection.InsertOne(r.Context, user)
 	return err
 }
